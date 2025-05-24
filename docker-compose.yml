@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:5432
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+  session:
+    image: redis:latest
+    restart: always
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    command: ["redis-server", "--port", "${REDIS_PORT}", "--requirepass", "${REDIS_PASSWORD}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+
+volumes:
+  pg-data:
+  redis-data:
