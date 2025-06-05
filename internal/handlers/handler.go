@@ -2,9 +2,7 @@ package handlers
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/vxdiazdel/rest-api/internal/db/stores"
 	"github.com/vxdiazdel/rest-api/internal/logger"
 )
@@ -25,10 +23,6 @@ func NewHandlerContext(
 		store: store,
 		lg:    lg,
 	}
-}
-
-func (h *HandlerContext) Ping(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"data": "pong"})
 }
 
 func (h *HandlerContext) Ctx() context.Context {

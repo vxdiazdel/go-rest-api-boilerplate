@@ -4,8 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/joho/godotenv"
 	"github.com/vxdiazdel/rest-api/internal/db"
 	"github.com/vxdiazdel/rest-api/internal/db/stores"
@@ -31,9 +35,29 @@ func main() {
 	// stores
 	store := stores.NewPostgresStore(ctx, dbConn, lg)
 
+	// sessions
+	sessionStore, err := redis.NewStore(
+		10,
+		"tcp",
+		os.Getenv("REDIS_URL"),
+		"",
+		os.Getenv("REDIS_PASSWORD"),
+		[]byte(os.Getenv("SESSION_SECRET")),
+	)
+	if err != nil {
+		panic(fmt.Errorf("create session store: %w", err))
+	}
+	sessionStore.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(7 * 24 * time.Hour.Seconds()),
+		Secure:   os.Getenv("GIN_MODE") == "production",
+	})
+
 	// clients
 
 	// router
-	r := router.NewRouter(ctx, store, lg)
+	r := router.NewRouter(ctx, store, sessionStore, lg)
 	r.Run()
 }

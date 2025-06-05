@@ -25,10 +25,6 @@ func NewPostgresStore(
 	}
 }
 
-func (s *PostgresStore) Ping(ctx context.Context) error {
-	return nil
-}
-
 func (s *PostgresStore) Ctx() context.Context {
 	return s.ctx
 }
