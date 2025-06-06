@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -73,6 +74,29 @@ func (h *HandlerContext) Login(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
+	}
+
+	// check if user has an existing session
+	s := sessions.Default(c)
+	jwt := s.Get(session.UserSession)
+	if jwt != nil {
+		if jwtStr, ok := jwt.(string); ok {
+			_, err := utils.VerifyToken(jwtStr)
+			if err == nil {
+				// token is valid and user is already logged in
+				// refresh session expiry
+				s.Options(sessions.Options{
+					MaxAge: int(7 * 24 * time.Hour.Seconds()),
+				})
+				if saveErr := s.Save(); saveErr != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "refresh user session failed"})
+					return
+				}
+
+				c.JSON(http.StatusOK, gin.H{"data": user})
+				return
+			}
+		}
 	}
 
 	// create auth token
